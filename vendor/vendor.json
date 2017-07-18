@@ -355,6 +355,12 @@
 			"revisionTime": "2017-03-10T01:59:53Z"
 		},
 		{
+			"checksumSHA1": "FAS/1YR1dE11iMwcyCyehuwyF40=",
+			"path": "github.com/gophercloud/gophercloud/openstack/db/v1/instances",
+			"revision": "062f2739aef0b03a8e68cd94865c34d416d753e0",
+			"revisionTime": "2017-07-14T02:05:18Z"
+		},
+		{
 			"checksumSHA1": "Mugw0ROrabHNN4nG9YlimPbyENk=",
 			"path": "github.com/gophercloud/gophercloud/openstack/dns/v2/recordsets",
 			"revision": "5a6e13341e63bd202a0da558a2a7187720042676",
