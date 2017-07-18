@@ -147,6 +147,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"openstack_db_instance":                     resourceDatabaseInstance(),
 			"openstack_blockstorage_volume_v1":          resourceBlockStorageVolumeV1(),
 			"openstack_blockstorage_volume_v2":          resourceBlockStorageVolumeV2(),
 			"openstack_blockstorage_volume_attach_v2":   resourceBlockStorageVolumeAttachV2(),
