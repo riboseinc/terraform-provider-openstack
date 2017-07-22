@@ -49,6 +49,25 @@ func resourceDatabaseInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"datastore": &schema.Schema{
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"version": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"type": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -60,11 +79,23 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating cloud database client: %s", err)
 	}
 
+	var datastore instances.DatastoreOpts
+	if p, ok := d.GetOk("datastore"); ok {
+		pV := (p.([]interface{}))[0].(map[string]interface{})
+
+		datastore = instances.DatastoreOpts{
+			Version: pV["version"].(string),
+			Type:    pV["type"].(string),
+		}
+	}
+
 	createOpts := &instances.CreateOpts{
 		FlavorRef: d.Get("flavor_id").(string),
 		Name:      d.Get("name").(string),
 		Size:      d.Get("size").(int),
 	}
+
+	createOpts.Datastore = &datastore
 
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
 	instance, err := instances.Create(databaseInstanceClient, createOpts).Extract()
@@ -116,6 +147,7 @@ func resourceDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("name", instance.Name)
 	d.Set("flavor_id", instance.Flavor)
+	d.Set("datastore", instance.Datastore)
 	d.Set("region", GetRegion(d, config))
 
 	return nil
