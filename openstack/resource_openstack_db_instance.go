@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/db/v1/databases"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/instances"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -97,6 +98,30 @@ func resourceDatabaseInstance() *schema.Resource {
 					},
 				},
 			},
+			"database": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"charset": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"collate": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -131,14 +156,28 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 		pV := (p.([]interface{}))[0].(map[string]interface{})
 
 		networks = append(networks, instances.NetworkOpts{
-			UUID:    pV["uuid"].(string),
-			Port:    pV["port"].(string),
-			V4FixedIP:    pV["fixed_ip_v4"].(string),
-			V6FixedIP:    pV["fixed_ip_v6"].(string),
+			UUID:      pV["uuid"].(string),
+			Port:      pV["port"].(string),
+			V4FixedIP: pV["fixed_ip_v4"].(string),
+			V6FixedIP: pV["fixed_ip_v6"].(string),
 		})
 	}
 
 	createOpts.Networks = networks
+
+	var dbs databases.BatchCreateOpts
+
+	if p, ok := d.GetOk("database"); ok {
+		pV := (p.([]interface{}))[0].(map[string]interface{})
+
+		dbs = append(dbs, databases.CreateOpts{
+			Name:    pV["name"].(string),
+			CharSet: pV["charset"].(string),
+			Collate: pV["collate"].(string),
+		})
+	}
+
+	createOpts.Databases = dbs
 
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
 	instance, err := instances.Create(databaseInstanceClient, createOpts).Extract()
