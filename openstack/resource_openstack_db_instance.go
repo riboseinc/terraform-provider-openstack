@@ -8,6 +8,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/databases"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/instances"
+	"github.com/gophercloud/gophercloud/openstack/db/v1/users"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -122,6 +123,37 @@ func resourceDatabaseInstance() *schema.Resource {
 					},
 				},
 			},
+			"user": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"password": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"host": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"databases": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -178,6 +210,24 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	createOpts.Databases = dbs
+
+	// user options
+	var users_list users.BatchCreateOpts
+
+	if p, ok := d.GetOk("user"); ok {
+		pV := (p.([]interface{}))[0].(map[string]interface{})
+
+		raw_databases := pV["databases"].(*schema.Set).List()
+
+		users_list = append(users_list, users.CreateOpts{
+			Name:      pV["name"].(string),
+			Password:  pV["password"].(string),
+			Databases: getDatabases(raw_databases),
+			Host:      pV["host"].(string),
+		})
+	}
+
+	createOpts.Users = users_list
 
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
 	instance, err := instances.Create(databaseInstanceClient, createOpts).Extract()
@@ -294,4 +344,17 @@ func InstanceStateRefreshFunc(client *gophercloud.ServiceClient, instanceID stri
 
 		return i, i.Status, nil
 	}
+}
+
+func getDatabases(v []interface{}) databases.BatchCreateOpts {
+
+	var dbs databases.BatchCreateOpts
+
+	for _, db := range v {
+		dbs = append(dbs, databases.CreateOpts{
+			Name: db.(string),
+		})
+	}
+
+	return dbs
 }
