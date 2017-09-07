@@ -154,31 +154,8 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if !dbExists {
-		return CheckDeleted(d, err, "database")
+		log.Printf("Database %s was not found on instance %s", dbname, d.Id())
 	}
-
-	log.Printf("[DEBUG] Deleting cloud database %s", d.Id())
-	err = databases.Delete(databaseInstanceClient, d.Id(), dbname).ExtractErr()
-	if err != nil {
-		return fmt.Errorf("Error deleting cloud database: %s", err)
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"ACTIVE", "SHUTOFF"},
-		Target:     []string{"deleted"},
-		Refresh:    DatabaseStateRefreshFunc(databaseInstanceClient, d.Id(), dbname),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for database (%s) to delete: %s",
-			d.Id(), err)
-	}
-
 	d.SetId("")
 	return nil
 }
