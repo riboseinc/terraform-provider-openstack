@@ -144,6 +144,9 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to retrieve databases: %s", err)
 	}
 
+	log.Printf("Retrieved databases", allDatabases)
+	log.Printf("Looking for db", dbname)
+
 	dbExists := false
 
 	for _, v := range allDatabases {
@@ -156,6 +159,9 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	if !dbExists {
 		log.Printf("Database %s was not found on instance %s", dbname, d.Id())
 	}
+
+	databases.Delete(databaseInstanceClient, d.Id(), dbname)
+
 	d.SetId("")
 	return nil
 }
