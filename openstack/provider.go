@@ -150,6 +150,7 @@ func Provider() terraform.ResourceProvider {
 			"openstack_db_instance":                     resourceDatabaseInstance(),
 			"openstack_database":                        resourceDatabase(),
 			"openstack_db_user":                         resourceDbUser(),
+			"openstack_db_config_group":                 resourceDbConfigGroup(),
 			"openstack_blockstorage_volume_v1":          resourceBlockStorageVolumeV1(),
 			"openstack_blockstorage_volume_v2":          resourceBlockStorageVolumeV2(),
 			"openstack_blockstorage_volume_attach_v2":   resourceBlockStorageVolumeAttachV2(),
