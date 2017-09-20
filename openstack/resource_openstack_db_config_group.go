@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"strconv"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/configurations"
@@ -111,22 +112,29 @@ func resourceDbConfigGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	createOpts.Datastore = &datastore
 
-	// createOpts.Values = make(map[string]interface{})
-	// createOpts.Values = map[string]interface{}{"collation_server": "latin1_swedish_ci"}
 
 	values := make(map[string]interface{})
 	if p, ok := d.GetOk("configuration"); ok {
-		pV := (p.([]interface{}))[0].(map[string]interface{})
 
-		values = map[string]interface{}{
-			pV["name"].(string): pV["value"].(string),
+		listSlice, _ := p.([]interface{})
+		for _, d := range listSlice {
+			if z, ok := d.(map[string]interface{}); ok {
+				name := z["name"].(string)
+				value := z["value"].(interface{})
+
+				// check if value can be converted into int
+				if valueInt, err := strconv.Atoi(value.(string)); err == nil {
+					value = valueInt
+				}
+
+				values[name] = value
+			}
 		}
 	}
-
+	
 	createOpts.Values = values
 
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
-	// cgroup, err := configurations.Create(databaseInstanceClient, createOpts).Extract()
 	cgroup, err := Create(databaseInstanceClient, createOpts).Extract()
 
 	if err != nil {
