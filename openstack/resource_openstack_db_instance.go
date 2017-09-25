@@ -307,7 +307,7 @@ func resourceDatabaseInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Waiting for volume (%s) to delete", d.Id())
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"ACTIVE", "SHUTOFF"},
+		Pending:    []string{"ACTIVE"},
 		Target:     []string{"deleted"},
 		Refresh:    InstanceStateRefreshFunc(databaseInstanceClient, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
