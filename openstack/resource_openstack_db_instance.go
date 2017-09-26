@@ -292,11 +292,6 @@ func resourceDatabaseInstanceDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating RS cloud instance client: %s", err)
 	}
 
-	//instance, err := instances.Get(databaseInstanceClient, d.Id()).Extract()
-	//if err != nil {
-	//	return CheckDeleted(d, err, "instance")
-	//}
-
 	log.Printf("[DEBUG] Deleting cloud database instance %s", d.Id())
 	err = instances.Delete(databaseInstanceClient, d.Id()).ExtractErr()
 	if err != nil {
@@ -308,7 +303,7 @@ func resourceDatabaseInstanceDelete(d *schema.ResourceData, meta interface{}) er
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"ACTIVE"},
-		Target:     []string{"deleted"},
+		Target:     []string{"DELETED"},
 		Refresh:    InstanceStateRefreshFunc(databaseInstanceClient, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
@@ -333,7 +328,7 @@ func InstanceStateRefreshFunc(client *gophercloud.ServiceClient, instanceID stri
 		i, err := instances.Get(client, instanceID).Extract()
 		if err != nil {
 			if _, ok := err.(gophercloud.ErrDefault404); ok {
-				return i, "deleted", nil
+				return i, "DELETED", nil
 			}
 			return nil, "", err
 		}
