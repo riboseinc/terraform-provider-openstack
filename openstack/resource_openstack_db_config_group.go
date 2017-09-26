@@ -197,7 +197,7 @@ func resourceDbConfigGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"ACTIVE", "SHUTOFF"},
-		Target:     []string{"deleted"},
+		Target:     []string{"DELETED"},
 		Refresh:    DbConfigGroupStateRefreshFunc(databaseInstanceClient, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
@@ -222,7 +222,7 @@ func DbConfigGroupStateRefreshFunc(client *gophercloud.ServiceClient, cgroupID s
 		i, err := configurations.Get(client, cgroupID).Extract()
 		if err != nil {
 			if _, ok := err.(gophercloud.ErrDefault404); ok {
-				return i, "deleted", nil
+				return i, "DELETED", nil
 			}
 			return nil, "", err
 		}
