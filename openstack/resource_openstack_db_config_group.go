@@ -1,11 +1,8 @@
 package openstack
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"time"
 	"strconv"
 
@@ -131,11 +128,11 @@ func resourceDbConfigGroupCreate(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 	}
-	
+
 	createOpts.Values = values
 
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
-	cgroup, err := Create(databaseInstanceClient, createOpts).Extract()
+	cgroup, err := configurations.Create(databaseInstanceClient, createOpts).Extract()
 
 	if err != nil {
 		return fmt.Errorf("Error creating cloud database configuration: %s", err)
@@ -237,90 +234,4 @@ func DbConfigGroupStateRefreshFunc(client *gophercloud.ServiceClient, cgroupID s
 		// return i, i.Status, nil
 		return i, "ACTIVE", nil
 	}
-}
-
-// test
-func Create(client *gophercloud.ServiceClient, opts CreateOptsBuilder) (r CreateResult) {
-	b, err := opts.ToConfigCreateMap()
-	if err != nil {
-		r.Err = err
-		return
-	}
-
-	_, r.Err = client.Post(baseURL(client), &b, &r.Body, &gophercloud.RequestOpts{OkCodes: []int{200}})
-	return
-}
-
-// test
-type CreateOptsBuilder interface {
-	ToConfigCreateMap() (map[string]interface{}, error)
-}
-
-func baseURL(c *gophercloud.ServiceClient) string {
-	return c.ServiceURL("configurations")
-}
-
-// test
-type CreateResult struct {
-	commonResult
-}
-
-type commonResult struct {
-	Result
-}
-
-func (r Result) ExtractInto(to interface{}) error {
-	if r.Err != nil {
-		return r.Err
-	}
-
-	if reader, ok := r.Body.(io.Reader); ok {
-		if readCloser, ok := reader.(io.Closer); ok {
-			defer readCloser.Close()
-		}
-		return json.NewDecoder(reader).Decode(to)
-	}
-
-	b, err := json.Marshal(r.Body)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(b, to)
-
-	return err
-}
-
-type Result struct {
-	// Body is the payload of the HTTP response from the server. In most cases,
-	// this will be the deserialized JSON structure.
-	Body interface{}
-
-	// Header contains the HTTP header structure from the original response.
-	Header http.Header
-
-	// Err is an error that occurred during the operation. It's deferred until
-	// extraction to make it easier to chain the Extract call.
-	Err error
-}
-
-// Extract will retrieve a ConfigZ resource from an operation result.
-func (r commonResult) Extract() (*ConfigZ, error) {
-	var s struct {
-		ConfigZ *ConfigZ `json:"configuration"`
-	}
-	err := r.ExtractInto(&s)
-	return s.ConfigZ, err
-}
-
-// Config represents a configuration group API resource.
-type ConfigZ struct {
-	Created              string `json:"created"`
-	Updated              string `json:"updated"`
-	DatastoreName        string `json:"datastore_name"`
-	DatastoreVersionID   string `json:"datastore_version_id"`
-	DatastoreVersionName string `json:"datastore_version_name"`
-	Description          string
-	ID                   string
-	Name                 string
-	Values               map[string]interface{}
 }
