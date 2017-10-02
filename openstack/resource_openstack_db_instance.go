@@ -154,6 +154,11 @@ func resourceDatabaseInstance() *schema.Resource {
 					},
 				},
 			},
+			"configuration": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -255,6 +260,11 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf(
 			"Error waiting for instance (%s) to become ready: %s",
 			instance.ID, err)
+	}
+
+	if configuration, ok := d.GetOk("configuration"); ok {
+		instances.AttachConfigGroup(databaseInstanceClient, instance.ID, configuration.(string))
+		log.Printf("Attaching configuration %v to the instance %v", configuration, instance.ID)
 	}
 
 	// Store the ID now

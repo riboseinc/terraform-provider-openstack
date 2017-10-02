@@ -227,11 +227,6 @@ func DbConfigGroupStateRefreshFunc(client *gophercloud.ServiceClient, cgroupID s
 			return nil, "", err
 		}
 
-		// if i.Status == "error" {
-		// 	return i, i.Status, fmt.Errorf("There was an error creating the configuration.")
-		// }
-
-		// return i, i.Status, nil
 		return i, "ACTIVE", nil
 	}
 }
