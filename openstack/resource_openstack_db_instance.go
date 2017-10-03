@@ -18,6 +18,7 @@ func resourceDatabaseInstance() *schema.Resource {
 		Create: resourceDatabaseInstanceCreate,
 		Read:   resourceDatabaseInstanceRead,
 		Delete: resourceDatabaseInstanceDelete,
+		Update: resourceDatabaseInstanceUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -158,6 +159,7 @@ func resourceDatabaseInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: false,
 			},
 		},
 	}
@@ -329,6 +331,24 @@ func resourceDatabaseInstanceDelete(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId("")
 	return nil
+}
+
+func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+	databaseInstanceClient, err := config.databaseInstanceClient(GetRegion(d, config))
+	if err != nil {
+		return fmt.Errorf("Error creating OpenStack cloud database client: %s", err)
+	}
+
+	if d.HasChange("configuration") {
+		old, new := d.GetChange("configuration")
+		instances.DetachConfigGroup(databaseInstanceClient, d.Id())
+		log.Printf("Detaching configuration %v from the instance %v", old, d.Id())
+		instances.AttachConfigGroup(databaseInstanceClient, d.Id(), new.(string))
+		log.Printf("Attaching configuration %v to the instance %v", new, d.Id())
+	}
+
+	return resourceDatabaseInstanceRead(d, meta)
 }
 
 // InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
