@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/db/v1/configurations"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/databases"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/instances"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/users"
@@ -265,8 +266,10 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if configuration, ok := d.GetOk("configuration"); ok {
-		instances.AttachConfigGroup(databaseInstanceClient, instance.ID, configuration.(string))
+		configurations.AttachConfigGroup(databaseInstanceClient, instance.ID, configuration.(string))
 		log.Printf("Attaching configuration %v to the instance %v", configuration, instance.ID)
+		instances.Restart(databaseInstanceClient, instance.ID)
+		log.Printf("Restarting instance instance %v", instance.ID)
 	}
 
 	// Store the ID now
@@ -342,9 +345,9 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("configuration") {
 		old, new := d.GetChange("configuration")
-		instances.DetachConfigGroup(databaseInstanceClient, d.Id())
+		configurations.DetachConfigGroup(databaseInstanceClient, d.Id())
 		log.Printf("Detaching configuration %v from the instance %v", old, d.Id())
-		instances.AttachConfigGroup(databaseInstanceClient, d.Id(), new.(string))
+		configurations.AttachConfigGroup(databaseInstanceClient, d.Id(), new.(string))
 		log.Printf("Attaching configuration %v to the instance %v", new, d.Id())
 	}
 
