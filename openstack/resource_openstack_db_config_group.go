@@ -3,8 +3,8 @@ package openstack
 import (
 	"fmt"
 	"log"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/configurations"
@@ -108,7 +108,6 @@ func resourceDbConfigGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	createOpts.Datastore = &datastore
-
 
 	values := make(map[string]interface{})
 	if p, ok := d.GetOk("configuration"); ok {
