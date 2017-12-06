@@ -178,6 +178,7 @@ func Provider() terraform.ResourceProvider {
 			"openstack_db_instance_v1":                  resourceDatabaseInstanceV1(),
 			"openstack_db_user_v1":                      resourceDatabaseUserV1(),
 			"openstack_db_database_v1":                  resourceDatabaseDatabaseV1(),
+			"openstack_db_configuration_v1":             resourceDatabaseConfigurationV1(),
 			"openstack_dns_recordset_v2":                resourceDNSRecordSetV2(),
 			"openstack_dns_zone_v2":                     resourceDNSZoneV2(),
 			"openstack_fw_firewall_v1":                  resourceFWFirewallV1(),
